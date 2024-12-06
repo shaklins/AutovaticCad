@@ -1,5 +1,7 @@
 import pandas as pd
 import win32com.client
+from win32com.client import VARIANT
+from pythoncom import VT_R8, VT_ARRAY
 
 
 def get_coord_zones(doc, layer="_AS-Зоны"):
@@ -69,10 +71,7 @@ def insert_block_to_zone(doc, data, mapping, zone_coords, block_name="_AS_Base_b
         base_y = base_y + y_offset
 
         # Смещаем координаты по x для текущего блока
-        insertion_point = win32com.client.VARIANT(
-            win32com.client.pythoncom.VT_ARRAY | win32com.client.pythoncom.VT_R8,
-            [base_x, base_y, 0]
-        )
+        insertion_point = VARIANT(VT_ARRAY | VT_R8,[base_x, base_y, 0])
 
         zone_coords[zone_name] = base_x, base_y
 
@@ -87,7 +86,11 @@ def insert_block_to_zone(doc, data, mapping, zone_coords, block_name="_AS_Base_b
             # Сопоставляем имя атрибута с данными из DataFrame
             if attr_tag in mapping:
                 data_field = mapping[attr_tag]
-                attrib.TextString = str(row.get(data_field, ""))  # Устанавливаем текст атрибута
+                str_data = str(row.get(data_field, ""))
+                if str_data[-2:]==".0":
+                    str_data = str_data[:-2]
+                if str_data != "nan":
+                    attrib.TextString = str(row.get(data_field, ""))  # Устанавливаем текст атрибута
         
         print(f"Блок '{block_name}' успешно вставлен в координаты {insertion_point} с атрибутами из строки {i}.")
 
@@ -98,12 +101,13 @@ mapping = {
     "4ПРОИЗВОДИТЕЛЬ": "Производитель",
     "5МОДЕЛЬ": "Модель",
     "6КАБЕЛЬ": "Кабель",
-    "7ЗОНА": "Зона",
-    "8ЭВ": "ЭВ",
-    "9МОЩЬ": "220В",
-    "10ЛВС": "ЛВС",
+    "6ЗОНА": "Зона",
+    "7ЭВ": "ЭВ",
+    "8МОЩЬ": "220В",
+    "9ЛВС": "ЛВС",
     "11ВЫСОТА": "Высота",
-    "12ВЫВОД": "Вывод"
+    "10ВЫВОД": "Вывод",
+    "12КАБЕЛЬ": "Кабель"
 }
 
 
